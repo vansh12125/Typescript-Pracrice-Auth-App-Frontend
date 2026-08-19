@@ -7,8 +7,9 @@ const RegisterUserByUsername = async (userData) => {
 const LoginUserByGoogle = async () => {
   window.location.href = `${baseURL}/auth/google`;
 };
-const LoginUserByGithub = async () => {
-  window.location.href = `${import.meta.env.VITE_API_BASE_URL}oauth2/authorization/github`; 
+
+const LoginUserByGithub = () => {
+  window.location.href = `${baseURL}/auth/github`;
 };
 
 const RefreshTokenRequest = async () => {
