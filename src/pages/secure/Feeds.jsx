@@ -24,7 +24,7 @@ export default function Feeds() {
   const dispatch = useDispatch();
   const currentUserId = user?.userId || user?.id;
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const searchQuery = searchParams.get("q") || "";
 
@@ -142,6 +142,7 @@ export default function Feeds() {
             className="mt-3 flex items-center gap-2 text-xs font-mono text-gray-500 hover:text-white "
             disabled={loading}
             onClick={() => {
+              setSearchParams({});
               fetchPosts(true);
             }}
           >
