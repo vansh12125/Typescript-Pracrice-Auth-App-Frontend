@@ -15,10 +15,9 @@ import {
 import { Link } from "react-router-dom";
 import { Grid } from "@/components/common";
 import { FloatingNav, ShareBtn } from "@/components/ui";
-import { usePosts, useAuth } from "@/hooks";
+import { usePosts } from "@/hooks";
 
 export default function MyPosts() {
-  const { user } = useAuth();
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [postToDelete, setPostToDelete] = useState(null);
   const { posts, fetched, fetchPosts, deleteUserPost } = usePosts();
