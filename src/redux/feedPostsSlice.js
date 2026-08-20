@@ -20,8 +20,7 @@ const feedPostsSlice = createSlice({
       const { postId, userId, liked } = action.payload;
 
       const post = state.posts.find(
-        (post) =>
-          (post.postId || post.id || post._id) === postId
+        (post) => (post.postId || post.id || post._id) === postId,
       );
 
       if (!post) return;
@@ -35,9 +34,7 @@ const feedPostsSlice = createSlice({
           post.likes.push(userId);
         }
       } else {
-        post.likes = post.likes.filter(
-          (id) => id !== userId
-        );
+        post.likes = post.likes.filter((id) => id !== userId);
       }
     },
 
@@ -48,10 +45,7 @@ const feedPostsSlice = createSlice({
   },
 });
 
-export const {
-  loadFeedPost,
-  updatePostLikes,
-  clearFeedPost,
-} = feedPostsSlice.actions;
+export const { loadFeedPost, updatePostLikes, clearFeedPost } =
+  feedPostsSlice.actions;
 
 export default feedPostsSlice.reducer;

@@ -39,7 +39,6 @@ export default function MyPosts() {
 
       setSuccess("Post deleted successfully.");
     } catch (error) {
-
       setError(error.response?.data?.message || "Failed to delete post.");
     } finally {
       setPostToDelete(null);
@@ -210,6 +209,7 @@ export default function MyPosts() {
                 <div className="flex items-center pt-4 border-t border-white/[0.04] gap-4">
                   <div className="flex items-center space-x-2 text-xs font-mono text-gray-400">
                     <span>{post.likes?.length || 0} Likes</span>
+                    <span>{post.comments?.length || 0} Comments</span>
                   </div>
                   <ShareBtn
                     text={`${window.location.origin}/post/${post._id}`}

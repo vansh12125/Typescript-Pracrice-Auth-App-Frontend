@@ -255,11 +255,14 @@ export default function Feeds() {
                   </button>
 
                   <div className="flex items-center space-x-4">
-                    <button className="flex items-center space-x-2 text-xs font-mono text-gray-400 hover:text-white transition-colors">
+                    <Link
+                      to={`/post/${post.id}`}
+                      className="flex items-center space-x-2 text-xs font-mono text-gray-400 hover:text-white transition-colors"
+                    >
                       <MessageSquare className="w-4 h-4" />
 
-                      <span>Comments</span>
-                    </button>
+                      <span>{post.comments.length} Comments</span>
+                    </Link>
 
                     <ShareBtn
                       text={`${window.location.origin}/post/${post.id}`}

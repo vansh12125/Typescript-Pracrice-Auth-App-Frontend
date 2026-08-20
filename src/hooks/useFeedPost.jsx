@@ -25,8 +25,7 @@ export default function useFeedPost() {
           loadFeedPost({
             posts: response.data.data || [],
           }),
-        );
-
+        );        
         return response;
       })
       .catch((error) => {
