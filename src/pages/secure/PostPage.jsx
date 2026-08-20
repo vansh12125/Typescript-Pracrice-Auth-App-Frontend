@@ -9,6 +9,7 @@ import {
   AlertCircle,
   Loader2,
   MoreVertical,
+  Reply,
   Trash2,
 } from "lucide-react";
 import { Grid } from "@/components/common";
@@ -34,17 +35,19 @@ export default function PostPage() {
 
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState("");
+  const [commentError, setCommentError] = useState("");
   const [isCommentFocused, setIsCommentFocused] = useState(false);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [deletingCommentId, setDeletingCommentId] = useState(null);
 
-  const menuRef = useRef(null);
+  const commentInputRef = useRef(null);
   const currentUserId = user?.userId || user?.id || user?._id;
 
+  // Handle outside click for menus reliably across all comments
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
+      if (!e.target.closest("[data-comment-menu]")) {
         setActiveMenuId(null);
       }
     };
@@ -62,7 +65,6 @@ export default function PostPage() {
       }
 
       const postData = response.data.data;
-
       const commentResponse = await getAllComments(postData._id);
 
       const likes = Array.isArray(postData.likes) ? postData.likes : [];
@@ -80,9 +82,9 @@ export default function PostPage() {
       setPost(normalizedData);
       setComments(postComments);
     } catch (err) {
-
       setError(
         err?.response?.data?.errors ||
+          err?.response?.data?.message ||
           "This post could not be found. It might have been deleted.",
       );
     } finally {
@@ -132,12 +134,34 @@ export default function PostPage() {
     }
   };
 
+  const handleReply = (comment) => {
+    const mentionTag = comment.userData?.username || comment.userData?.name || "user";
+    setCommentError("");
+    setCommentText((prev) => {
+      const cleaned = prev.replace(/^@\S+\s*/, "");
+      return `@${mentionTag} ${cleaned}`;
+    });
+    setIsCommentFocused(true);
+    setActiveMenuId(null);
+
+    setTimeout(() => {
+      if (commentInputRef.current) {
+        commentInputRef.current.focus();
+        const length = commentInputRef.current.value.length;
+        commentInputRef.current.setSelectionRange(length, length);
+        commentInputRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 50);
+  };
+
   const handleAddComment = async (e) => {
     e.preventDefault();
     if (!commentText.trim() || isSubmittingComment || !currentUserId) return;
 
     try {
       setIsSubmittingComment(true);
+      setCommentError("");
+
       const response = await addComment({
         postId: post.id,
         content: commentText.trim(),
@@ -164,6 +188,11 @@ export default function PostPage() {
       setIsCommentFocused(false);
     } catch (err) {
       console.error("Failed to post comment:", err);
+      setCommentError(
+        err?.response?.data?.message ||
+          err?.response?.data?.errors ||
+          "Failed to submit comment. Please try again.",
+      );
     } finally {
       setIsSubmittingComment(false);
     }
@@ -172,15 +201,18 @@ export default function PostPage() {
   const handleDeleteComment = async (commentId) => {
     try {
       setDeletingCommentId(commentId);
-      const res=await deleteComment({postId:post.id, commentId});
-      console.log(res.data);
-      
+      setCommentError("");
+      await deleteComment({ postId: post.id, commentId });
+
       setComments((prev) => prev.filter((c) => (c._id || c.id) !== commentId));
       setActiveMenuId(null);
     } catch (err) {
-      console.log(err.response);
-      
       console.error("Failed to delete comment:", err);
+      setCommentError(
+        err?.response?.data?.message ||
+          err?.response?.data?.errors ||
+          "Failed to delete comment. Please try again.",
+      );
     } finally {
       setDeletingCommentId(null);
     }
@@ -323,7 +355,7 @@ export default function PostPage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="w-full backdrop-blur-2xl bg-black/40 border border-white/[0.06] rounded-2xl p-6 md:p-8 shadow-2xl space-y-8"
+          className="w-full backdrop-blur-2xl bg-black/40 border border-white/[0.06] rounded-2xl p-6 md:p-8 shadow-2xl space-y-6"
         >
           <div className="flex items-center justify-between border-b border-white/[0.04] pb-4">
             <h3 className="text-sm font-mono tracking-wider text-white uppercase flex items-center space-x-2">
@@ -333,6 +365,31 @@ export default function PostPage() {
               </span>
             </h3>
           </div>
+
+          {/* Comment API Inline Error Banner */}
+          <AnimatePresence>
+            {commentError && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono">
+                  <div className="flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{commentError}</span>
+                  </div>
+                  <button
+                    onClick={() => setCommentError("")}
+                    className="text-red-400 hover:text-red-300 ml-2 text-sm font-bold cursor-pointer"
+                  >
+                    ×
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* YouTube-style Comment Input */}
           <div className="flex items-start space-x-3.5">
@@ -345,8 +402,12 @@ export default function PostPage() {
             <div className="flex-1">
               <form onSubmit={handleAddComment}>
                 <textarea
+                  ref={commentInputRef}
                   value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
+                  onChange={(e) => {
+                    setCommentText(e.target.value);
+                    if (commentError) setCommentError("");
+                  }}
                   onFocus={() => setIsCommentFocused(true)}
                   placeholder="Add a comment..."
                   rows={isCommentFocused || commentText ? 2 : 1}
@@ -366,6 +427,7 @@ export default function PostPage() {
                         onClick={() => {
                           setCommentText("");
                           setIsCommentFocused(false);
+                          setCommentError("");
                         }}
                         className="px-3.5 py-1.5 text-xs font-mono text-gray-400 hover:text-white transition-colors cursor-pointer rounded-lg"
                       >
@@ -456,47 +518,57 @@ export default function PostPage() {
                       </div>
                     </div>
 
-                    {/* Three-Dot Menu (Accessible to Comment Owner OR Post Owner) */}
-                    {canDelete && (
-                      <div className="relative shrink-0 ml-2" ref={menuRef}>
-                        <button
-                          onClick={() =>
-                            setActiveMenuId(
-                              activeMenuId === commentId ? null : commentId,
-                            )
-                          }
-                          className="p-1 rounded-md text-gray-500 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
-                          aria-label="More options"
-                        >
-                          <MoreVertical className="w-3.5 h-3.5" />
-                        </button>
+                    {/* Three dots dropdown menu (Visible to all users) */}
+                    <div className="relative shrink-0 ml-2" data-comment-menu>
+                      <button
+                        onClick={() =>
+                          setActiveMenuId(
+                            activeMenuId === commentId ? null : commentId,
+                          )
+                        }
+                        className="p-1 rounded-md text-gray-500 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+                        aria-label="More options"
+                      >
+                        <MoreVertical className="w-3.5 h-3.5" />
+                      </button>
 
-                        <AnimatePresence>
-                          {activeMenuId === commentId && (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.95, y: -4 }}
-                              animate={{ opacity: 1, scale: 1, y: 0 }}
-                              exit={{ opacity: 0, scale: 0.95, y: -4 }}
-                              transition={{ duration: 0.15 }}
-                              className="absolute right-0 mt-1 w-32 rounded-xl bg-[#0e0e11] border border-white/10 shadow-2xl py-1 z-30 backdrop-blur-xl"
+                      <AnimatePresence>
+                        {activeMenuId === commentId && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute right-0 mt-1 w-32 rounded-xl bg-[#0e0e11] border border-white/10 shadow-2xl py-1 z-30 backdrop-blur-xl"
+                          >
+                            {/* Reply option for all users */}
+                            <button
+                              onClick={() => handleReply(comment)}
+                              className="w-full px-3 py-1.5 text-[11px] font-mono text-gray-300 hover:bg-white/[0.06] hover:text-white flex items-center space-x-2 transition-colors cursor-pointer text-left"
                             >
+                              <Reply className="w-3.5 h-3.5" />
+                              <span>Reply</span>
+                            </button>
+
+                            {/* Delete option restricted to comment/post owner */}
+                            {canDelete && (
                               <button
                                 onClick={() => handleDeleteComment(commentId)}
                                 disabled={deletingCommentId === commentId}
-                                className="w-full px-3 py-1.5 text-[11px] font-mono text-red-400 hover:bg-red-500/10 hover:text-red-300 flex items-center space-x-2 transition-colors cursor-pointer text-left"
+                                className="w-full px-3 py-1.5 text-[11px] font-mono text-red-400 hover:bg-red-500/10 hover:text-red-300 flex items-center space-x-2 transition-colors cursor-pointer text-left border-t border-white/[0.04]"
                               >
                                 {deletingCommentId === commentId ? (
                                   <Loader2 className="w-3 h-3 animate-spin text-red-400" />
                                 ) : (
-                                  <Trash2 className="w-3 h-3 text-red-400" />
+                                  <Trash2 className="w-3.5 h-3.5 text-red-400" />
                                 )}
                                 <span>Delete</span>
                               </button>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    )}
+                            )}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </div>
                 );
               })

@@ -63,7 +63,7 @@ export default function UserProfile() {
         setIsLoadingPosts(true);
         const targetId = profile?.userId || profile?.id || profile?._id;
         const response = await getAllPublicPostByUser(targetId);
-        
+
         const normalizedPosts = (response.data.data || []).map((post) => ({
           ...post,
           id: post._id,
@@ -280,9 +280,7 @@ export default function UserProfile() {
                             <span>{formatDate(post.createdAt)}</span>
                           </div>
                         </div>
-                        <Link
-                          to={`${window.location.origin}/post/${post._id}`}
-                        >
+                        <Link to={`${window.location.origin}/post/${post._id}`}>
                           <div className="mb-5">
                             <h3 className="text-base font-bold text-white mb-1.5 tracking-tight leading-snug">
                               {post.title}
@@ -310,6 +308,7 @@ export default function UserProfile() {
                             />
                             <span>{post.likes.length} Likes</span>
                           </button>
+                          <span className="text-xs font-mono">{post.comments.length} Comments</span>
                           <ShareBtn
                             text={`${window.location.origin}/post/${post._id}`}
                           />
