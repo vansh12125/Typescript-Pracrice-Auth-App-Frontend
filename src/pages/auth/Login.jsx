@@ -198,15 +198,16 @@ export default function Login() {
     }
     setIsLoading(true);
     try {
-      await sendResetPasswordOtp({
+      const response=await sendResetPasswordOtp({
         identifier: username.toLowerCase().trim(),
       });
-
+      
       setSuccess({ response: "OTP sent successfully to your email." });
       setResetStep(2);
     } catch (error) {
+      
       setErrors({
-        response: error.response?.data?.message || "Failed to send OTP.",
+        response: error.response?.data?.errors || "Failed to send OTP.",
       });
     } finally {
       setIsLoading(false);
@@ -227,8 +228,9 @@ export default function Login() {
 
       setSuccess({ response: "A new OTP has been sent." });
     } catch (error) {
+      
       setErrors({
-        response: error.response?.data?.message || "Failed to resend OTP.",
+        response: error.response?.data?.errors || "Failed to resend OTP.",
       });
     } finally {
       setIsLoading(false);
@@ -260,9 +262,10 @@ export default function Login() {
         window.location.hash = "login";
       }, 1500);
     } catch (error) {
+      
       setErrors({
         response:
-          error.response?.data?.message ||
+          error.response?.data?.errors ||
           "Failed to reset password. Please check your OTP.",
       });
     } finally {

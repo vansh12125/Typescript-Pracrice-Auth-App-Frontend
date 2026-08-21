@@ -99,7 +99,6 @@ export default function Feeds() {
         await likePost(postId, currentUserId);
       }
     } catch (error) {
-      console.error("Like/Unlike failed:", error);
 
       dispatch(
         updatePostLikes({

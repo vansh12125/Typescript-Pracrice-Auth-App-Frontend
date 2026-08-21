@@ -67,11 +67,13 @@ const deleteUser = async () => {
 };
 
 const sendResetPasswordOtp = async (data) => {
+  
   return await apiClient.post(`/auth/send-otp/reset-password`, data);
 };
 
 const verifyResetPasswordOtp = async (data) => {
-  return await apiClient.post(`/auth/verify-otp/reset-password`, data);
+  
+  return await apiClient.post(`/auth/reset-password`, data);
 };
 
 const changePasswordRequest = async (data) => {

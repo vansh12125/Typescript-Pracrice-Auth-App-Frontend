@@ -29,7 +29,6 @@ export default function useFeedPost() {
         return response;
       })
       .catch((error) => {
-        console.error("Failed to fetch posts:", error);
         throw error;
       })
       .finally(() => {

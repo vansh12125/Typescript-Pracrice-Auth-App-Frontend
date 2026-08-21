@@ -187,7 +187,6 @@ export default function PostPage() {
       setCommentText("");
       setIsCommentFocused(false);
     } catch (err) {
-      console.error("Failed to post comment:", err);
       setCommentError(
         err?.response?.data?.message ||
           err?.response?.data?.errors ||
@@ -207,7 +206,6 @@ export default function PostPage() {
       setComments((prev) => prev.filter((c) => (c._id || c.id) !== commentId));
       setActiveMenuId(null);
     } catch (err) {
-      console.error("Failed to delete comment:", err);
       setCommentError(
         err?.response?.data?.message ||
           err?.response?.data?.errors ||
